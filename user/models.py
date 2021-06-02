@@ -56,7 +56,7 @@ class CoWorker(models.Model):
     age = models.IntegerField(null=True, default=None)
     gender = models.CharField(max_length=12, null=True, default=None)
     available = models.BooleanField(default=True)
-    working_at = models.OneToOneField(Hospital, null=True, default=None)
+    working_at = models.OneToOneField(Hospital, null=True, default=None, on_delete=models.DO_NOTHING)
 
 
 class Patient(models.Model):

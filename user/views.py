@@ -101,7 +101,7 @@ def user_register(request):
                 gender = jsn['gender']
             if 'diseases' in jsn:
                 diseases = jsn['diseases']
-            patient = Patient(user, age=age, gender=gender, health_status=diseases)
+            patient = Patient(user.id, age=age, gender=gender, health_status=diseases)
             patient.save()
         elif jsn['account_type'] == 2:
             c_count = beds = ventilators = oxygens = n_doctors = n_coworkers = n_nurses = n_ventilators = 0
@@ -132,7 +132,7 @@ def user_register(request):
                 n_nurses = jsn['nurses_required']
             if 'coworkers_required' in jsn:
                 n_coworkers = jsn['coworkers_required']
-            hospital = Hospital(user, c_count, beds, ventilators, oxygens, a_patients, a_coworkers, a_doctors,
+            hospital = Hospital(user.id, c_count, beds, ventilators, oxygens, a_patients, a_coworkers, a_doctors,
                                 a_nurses, a_ventitalors, n_ventilators, n_coworkers, n_doctors, n_nurses)
             hospital.save()
         elif jsn['account_type'] == 3:
@@ -147,7 +147,7 @@ def user_register(request):
                 ven_avail = jsn['ven_avail']
             if 'total_ven' in jsn:
                 total_ven = jsn['total_ven']
-            venProvider = VenProvider(user, age, gender, ven_avail, total_ven)
+            venProvider = VenProvider(user.id, age, gender, ven_avail, total_ven)
             venProvider.save()
         elif 4 <= jsn['account_type'] <= 6:
             age = gender = None
@@ -163,7 +163,7 @@ def user_register(request):
                 hospital = Hospital.objects.filter(id=jsn['working_at']).first()
                 if hospital:
                     working_at = hospital
-            coworker = CoWorker(user, age, gender, available, working_at)
+            coworker = CoWorker(user.id, age, gender, available, working_at)
             coworker.save()
     except IntegrityError as err:
         print(str(err))
