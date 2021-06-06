@@ -3,7 +3,7 @@ import json
 from django.conf import settings
 from HelpingHearts.settings import blackListedTokens
 from django.db.utils import IntegrityError
-# from django.middleware.csrf import get_token
+from django.middleware.csrf import get_token
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
@@ -225,14 +225,13 @@ def user_login(request):
     serialized_user = UserSerializer(user).data
     access_token = generate_access_token(user)
     refresh_token = generate_refresh_token(user)
-    # csrf_token = get_token(request)
+    csrf_token = get_token(request)
     response.set_cookie(key='refreshtoken', value=refresh_token, httponly=True, secure=True, samesite=None)
     response.data = {
         'status': True,
         'message': 'successfully logged in',
         'access_token': access_token,
         # 'refresh_token': refresh_token,
-        # 'csrf_token': csrf_token,
         'user': serialized_user,
     }
     return response
@@ -444,10 +443,18 @@ def user_verify(request):
 @check_blacklisted_token
 def user_modify(request):
     user = request.user
+    authorization_header = request.headers.get('Authorization')
+    if not authorization_header:
+        return Response(
+            {
+                'status': False,
+                'message': 'credentials missing'
+            }
+        )
     context = {}
     js: dict
     try:
-        jsn = json.loads(request.body)
+        jsn = request.data
     except json.decoder.JSONDecodeError:
         jsn = {}
     if jsn:

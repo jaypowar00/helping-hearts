@@ -27,8 +27,8 @@ blackListedTokens = set()
 # Application definition
 
 INSTALLED_APPS = [
-    'rest_framework',
     'corsheaders',
+    'rest_framework',
     'user',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -78,11 +78,11 @@ WSGI_APPLICATION = 'HelpingHearts.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_HH_NAME', 'helpinghearts'),
+        'NAME': os.getenv('DB_HH_NAME', 'd1t2a5q297s2nf'),
         'PORT': os.getenv('DB_HH_PORT', '5432'),
-        'HOST': os.getenv('DB_HH_HOST_URL', 'localhost'),
-        'USER': os.getenv('DB_HH_USERNAME', 'postgres'),
-        'PASSWORD': os.getenv('DB_HH_PASSWORD', 'super')
+        'HOST': os.getenv('DB_HH_HOST_URL', 'ec2-54-197-100-79.compute-1.amazonaws.com'),
+        'USER': os.getenv('DB_HH_USERNAME', 'baodjpaiqgdzzv'),
+        'PASSWORD': os.getenv('DB_HH_PASSWORD', '01d24681b2490a8bb512db147eea0b94dc892b179e69e28a5ed1bb8722a701e4')
     }
 }
 
@@ -134,15 +134,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'user.User'
 
 CSRF_COOKIE_DOMAIN = 'helpinghearts-mraj.herokuapp.com'
-CSRF_COOKIE_SECURE = True
+# CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_SAMESITE = 'None'
 SESSION_COOKIE_SAMESITE = 'None'
 SESSION_COOKIE_SAMESITE_FORCE_ALL = True
 SESSION_COOKIE_SECURE = True
 CSRF_TRUSTED_ORIGINS = [
-    'localhost',
-    '127.0.0.1',
-    'helpinghearts-mraj.herokuapp.com',
+    'http://localhost',
+    'http://127.0.0.1',
+    'https://helpinghearts-mraj.herokuapp.com',
 ]
 
 CORS_ORIGIN_WHITELIST = [
