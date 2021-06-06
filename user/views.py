@@ -438,3 +438,102 @@ def user_verify(request):
             'user': response
         }
     )
+
+
+@api_view(['POST'])
+@check_blacklisted_token
+def user_modify(request):
+    user = request.user
+    context = {}
+    js: dict
+    try:
+        jsn = json.loads(request.body)
+    except json.decoder.JSONDecodeError:
+        jsn = {}
+    if jsn:
+        for key, value in jsn.items():
+            if key != 'password' or key != 'new_password':
+                context[key] = value
+    if 'password' not in jsn:
+        return Response(
+            {
+                'status': False,
+                'message': 'password missing'
+            }
+        )
+    try:
+        UserModel = get_user_model()
+        user = UserModel.objects.filter(id=user.id).first()
+        if not user.check_password(jsn['password']):
+            return Response(
+                {
+                    'status': False,
+                    'message': 'wrong password'
+                }
+            )
+        if 'new_password' in jsn:
+            user.set_password(jsn['new_password'])
+        user.name = jsn['name'] if 'name' in jsn else user.name
+        user.phone = jsn['phone'] if 'phone' in jsn else user.phone
+        user.address = jsn['address'] if 'address' in jsn else user.address
+        user.pincode = jsn['pincode'] if 'pincode' in jsn else user.pincode
+        user.about = jsn['about'] if 'about' in jsn else user.about
+        user.save()
+        if user.account_type == 1:
+            patient = Patient.objects.filter(id=user.id).first()
+            patient.age = jsn['age'] if 'age' in jsn else patient.age
+            patient.gender = jsn['gender'] if 'gender' in jsn else patient.gender
+            patient.health_status = jsn['diseases'] if 'diseases' in jsn else patient.health_status
+            patient.save()
+        elif user.account_type == 2:
+            hospital = Hospital.objects.filter(id=user.id).first()
+            hospital.corona_count = jsn['c_count'] if 'c_count' in jsn else hospital.corona_count
+            hospital.beds = jsn['beds'] if 'beds' in jsn else hospital.beds
+            hospital.ventilators = jsn['ventilators'] if 'ventilators' in jsn else hospital.ventilators
+            hospital.oxygens = jsn['oxygens'] if 'oxygens' in jsn else hospital.oxygens
+            hospital.accepting_patients = jsn['accepting_patients'] if 'accepting_patients' in jsn else hospital.accepting_patients
+            hospital.accepting_coworkers = jsn['accepting_coworkers'] if 'accepting_coworkers' in jsn else hospital.accepting_coworkers
+            hospital.accepting_doctors = jsn['accepting_doctors'] if 'accepting_doctors' in jsn else hospital.accepting_doctors
+            hospital.accepting_nurses = jsn['accepting_nurses'] if 'accepting_nurses' in jsn else hospital.accepting_nurses
+            hospital.need_ventilator = jsn['need_ventilators'] if 'need_ventilators' in jsn else hospital.need_ventilator
+            hospital.ventilators_requirement = jsn['ventilators_required'] if 'ventilators_required' in jsn else hospital.ventilators_requirement
+            hospital.doctors_requirement = jsn['doctors_required'] if 'doctors_required' in jsn else hospital.doctors_requirement
+            hospital.nurses_requirement = jsn['nurses_required'] if 'nurses_required' in jsn else hospital.nurses_requirement
+            hospital.workers_requirement = jsn['coworkers_required'] if 'coworkers_required' in jsn else hospital.workers_requirement
+            hospital.save()
+        elif user.account_type == 3:
+            venProvider = VenProvider.objects.filter(id=user.id).first()
+            venProvider.age = jsn['age'] if 'age' in jsn else venProvider.age
+            venProvider.gender = jsn['gender'] if 'gender' in jsn else venProvider.gender
+            venProvider.ventilators_available = jsn['ven_avail'] if 'ven_avail' in jsn else venProvider.ventilators_available
+            venProvider.total_ventilators = jsn['total_ven'] if 'total_ven' in jsn else venProvider.total_ventilators
+            venProvider.save()
+        elif 4 <= user.account_type <= 6:
+            coworker = CoWorker.objects.filter(id=user.id).first()
+            coworker.age = jsn['age'] if 'age' in jsn else coworker.age
+            coworker.gender = jsn['gender'] if 'gender' in jsn else coworker.gender
+            coworker.available = jsn['available'] if 'available' in jsn else coworker.available
+            if 'working_at' in jsn:
+                if jsn['working_at'] is None:
+                    working_at = None
+                else:
+                    hospital = Hospital.objects.filter(id=jsn['working_at']).first()
+                    if hospital:
+                        working_at = hospital
+                coworker.working_at = working_at
+            coworker.save()
+    except Exception as e:
+        return Response(
+            {
+                'status': False,
+                'message': 'Server Error while Updating User'
+            }
+        )
+    if jsn:
+        return Response(
+            {
+                'status': True,
+                'message': 'User updated!',
+                'user': context
+            }
+        )

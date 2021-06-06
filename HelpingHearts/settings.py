@@ -19,6 +19,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
+    'helpinghearts-mraj.herokuapp.com',
 ]
 
 blackListedTokens = set()
@@ -132,7 +133,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'user.User'
 
-# CSRF_COOKIE_DOMAIN = 'example.com'
+CSRF_COOKIE_DOMAIN = 'helpinghearts-mraj.herokuapp.com'
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_SAMESITE = 'None'
 SESSION_COOKIE_SAMESITE = 'None'
@@ -141,9 +142,14 @@ SESSION_COOKIE_SECURE = True
 CSRF_TRUSTED_ORIGINS = [
     'localhost',
     '127.0.0.1',
+    'helpinghearts-mraj.herokuapp.com',
 ]
 
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_WHITELIST = [
+    'https://localhost',
+    'https://127.0.0.1',
+    'helpinghearts-mraj.herokuapp.com',
+]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = list(default_headers) + [
     'refreshtoken',
