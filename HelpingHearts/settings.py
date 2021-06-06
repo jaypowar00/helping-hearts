@@ -148,7 +148,7 @@ CSRF_TRUSTED_ORIGINS = [
 CORS_ORIGIN_WHITELIST = [
     'https://localhost',
     'https://127.0.0.1',
-    'helpinghearts-mraj.herokuapp.com',
+    'https://helpinghearts-mraj.herokuapp.com',
 ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = list(default_headers) + [
