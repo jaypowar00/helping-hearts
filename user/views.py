@@ -24,6 +24,28 @@ def user_profile(request):
         if ac_type == 1:
             patient = Patient.objects.filter(id=user.id).first()
             serialized_patient = PatientSerializer(patient).data
+            if serialized_patient['requested_hospital']:
+                hospital = Hospital.objects.filter(id=patient.requested_hospital).first()
+                if hospital:
+                    serialized_patient['requested_hospital'] = {
+                        'id': hospital.id,
+                        'name': hospital.id.name,
+                        'pincode': hospital.id.pincode,
+                        'address': hospital.id.address
+                    }
+                else:
+                    serialized_patient['requested_hospital'] = None
+            if serialized_patient['admitted_hospital']:
+                hospital = Hospital.objects.filter(id=patient.admitted_hospital).first()
+                if hospital:
+                    serialized_patient['admitted_hospital'] = {
+                        'id': hospital.id,
+                        'name': hospital.id.name,
+                        'pincode': hospital.id.pincode,
+                        'address': hospital.id.address
+                    }
+                else:
+                    serialized_patient['admitted_hospital'] = None
             del serialized_patient['id']
             serialized_user['account_type'] = 'patient'
             serialized_user['detail'] = serialized_patient
@@ -255,6 +277,7 @@ def user_login(request):
         'message': 'successfully logged in',
         'access_token': access_token,
         # 'refresh_token': refresh_token,
+        'csrf_token': csrf_token,
         'user': serialized_user,
     }
     return response
@@ -377,13 +400,13 @@ def refresh_token_view(request):
             }
         )
     access_token = generate_access_token(user)
-    # csrf_token = get_token(request)
+    csrf_token = get_token(request)
     return Response(
         {
             'status': True,
             'message': 'access token refreshed',
             'access_token': access_token,
-            # 'csrf_token': csrf_token,
+            'csrf_token': csrf_token,
         }
     )
 
@@ -514,6 +537,19 @@ def user_modify(request):
             patient.age = jsn['age'] if 'age' in jsn else patient.age
             patient.gender = jsn['gender'] if 'gender' in jsn else patient.gender
             patient.health_status = jsn['diseases'] if 'diseases' in jsn else patient.health_status
+            patient.ct_scan_score = jsn['ct_scan_score'] if 'ct_scan_score' in jsn else patient.ct_scan_score
+            patient.ct_scan_document = jsn['ct_scan_document'] if 'ct_scan_document' in jsn else patient.ct_scan_document
+            patient.admitted = jsn['admitted'] if 'admitted' in jsn else patient.admitted
+            patient.admit_request = jsn['admit_request'] if 'admit_request' in jsn else patient.admit_request
+            if 'requested_hospital' in jsn:
+                hospital = Hospital.objects.filter(id=jsn['requested_hospital']).first()
+                requested_hospital = hospital if hospital else None
+                patient.requested_hospital = requested_hospital
+            if 'admitted_hospital' in jsn:
+                hospital = Hospital.objects.filter(id=jsn['admitted_hospital']).first()
+                admitted_hospital = hospital if hospital else None
+                patient.admitted_hospital = admitted_hospital
+            patient.bed_type = jsn['bed_type'] if 'bed_type' in jsn else patient.bed_type
             patient.save()
         elif user.account_type == 2:
             hospital = Hospital.objects.filter(id=user.id).first()

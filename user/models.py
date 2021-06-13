@@ -56,9 +56,9 @@ class CoWorker(models.Model):
     age = models.IntegerField(null=True, default=None)
     gender = models.CharField(max_length=12, null=True, default=None)
     available = models.BooleanField(default=True)
-    working_at = models.OneToOneField(Hospital, related_name='working_at', null=True, default=None, on_delete=models.SET_NULL)
+    working_at = models.OneToOneField(Hospital, related_name='%(class)s_working_at', null=True, default=None, on_delete=models.SET_NULL)
     work_request = models.BooleanField(default=False)
-    requested_hospital = models.OneToOneField(Hospital, related_name='requested_hospital', null=True, default=None, on_delete=models.SET_NULL)
+    requested_hospital = models.OneToOneField(Hospital, related_name='%(class)s_requested_hospital', null=True, default=None, on_delete=models.SET_NULL)
 
 
 class Patient(models.Model):
@@ -68,3 +68,8 @@ class Patient(models.Model):
     health_status = models.TextField(null=True, default=None)
     ct_scan_score = models.FloatField(null=True, default=None)
     ct_scan_document = models.TextField(null=True, default=None)
+    admit_request = models.BooleanField(default=False)
+    requested_hospital = models.OneToOneField(Hospital, related_name='%(class)s_requested_hospital', null=True, default=None, on_delete=models.SET_NULL)
+    admitted = models.BooleanField(default=False)
+    admitted_hospital = models.OneToOneField(Hospital, related_name='%(class)s_admitted_hospital', null=True, default=None, on_delete=models.SET_NULL)
+    bed_type = models.IntegerField(default=1)
