@@ -19,7 +19,7 @@ class HospitalSerializer(serializers.ModelSerializer):
 class CoWorkerSerializer(serializers.ModelSerializer):
     class Meta:
         model = CoWorker
-        fields = ['id', 'age', 'gender', 'available', 'working_at']
+        fields = ['id', 'age', 'gender', 'work_request', 'requested_hospital', 'available', 'working_at']
 
 
 class PatientSerializer(serializers.ModelSerializer):

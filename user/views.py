@@ -43,6 +43,29 @@ def user_profile(request):
             coworker = CoWorker.objects.filter(id=user.id).first()
             serialized_coworker = CoWorkerSerializer(coworker).data
             del serialized_coworker['id']
+            if serialized_coworker['requested_hospital']:
+                hospital = Hospital.objects.filter(id=serialized_coworker['requested_hospital']).first()
+                if hospital:
+                    serialized_coworker['requested_hospital'] = {
+                        'id': hospital.id,
+                        'name': hospital.id.name,
+                        'pincode': hospital.id.pincode,
+                        'address': hospital.id.address
+                    }
+                else:
+                    serialized_coworker['requested_hospital'] = None
+            if serialized_coworker['working_at']:
+                hospital = Hospital.objects.filter(id=serialized_coworker['working_at']).first()
+                if hospital:
+                    serialized_coworker['working_at'] = {
+                        'id': hospital.id,
+                        'name': hospital.id.name,
+                        'pincode': hospital.id.pincode,
+                        'address': hospital.id.address
+                    }
+                else:
+                    serialized_coworker['working_at'] = None
+
             serialized_user['account_type'] = 'coworker' if ac_type == 4 else 'doctor' if ac_type == 5 else 'nurse'
             serialized_user['detail'] = serialized_coworker
     except AttributeError:
@@ -166,8 +189,8 @@ def user_register(request):
             coworker = CoWorker(user.id, age, gender, available, working_at)
             coworker.save()
     except IntegrityError as err:
-        print(str(err))
-        dup = str(err).split('user_user')[1].split('.')[1]
+        print(str(err).split('\n')[1].split('(')[1].split(')')[0])
+        dup = str(err).split('\n')[1].split('(')[1].split(')')[0]
         return Response(
             {
                 'status': False,
@@ -461,7 +484,7 @@ def user_modify(request):
         for key, value in jsn.items():
             if key != 'password' or key != 'new_password':
                 context[key] = value
-    if 'password' not in jsn:
+    if 'new_password' in jsn and 'password' not in jsn:
         return Response(
             {
                 'status': False,
@@ -520,6 +543,7 @@ def user_modify(request):
             coworker.age = jsn['age'] if 'age' in jsn else coworker.age
             coworker.gender = jsn['gender'] if 'gender' in jsn else coworker.gender
             coworker.available = jsn['available'] if 'available' in jsn else coworker.available
+            coworker.work_request = jsn['work_request'] if 'work_request' in jsn else coworker.work_request
             if 'working_at' in jsn:
                 if jsn['working_at'] is None:
                     working_at = None
@@ -527,7 +551,19 @@ def user_modify(request):
                     hospital = Hospital.objects.filter(id=jsn['working_at']).first()
                     if hospital:
                         working_at = hospital
+                    else:
+                        working_at = None
                 coworker.working_at = working_at
+            if 'requested_hospital' in jsn:
+                if jsn['requested_hospital'] is None:
+                    requested_hospital = None
+                else:
+                    hospital = Hospital.objects.filter(id=jsn['requested_hospital']).first()
+                    if hospital:
+                        requested_hospital = hospital
+                    else:
+                        requested_hospital = None
+                coworker.requested_hospital = requested_hospital
             coworker.save()
     except Exception as e:
         return Response(
