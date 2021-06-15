@@ -109,7 +109,7 @@ def user_profile(request):
 @permission_classes([AllowAny])
 def user_register(request):
     context = {}
-    js: dict
+    jsn: dict
     try:
         jsn = json.loads(request.body)
     except json.decoder.JSONDecodeError:

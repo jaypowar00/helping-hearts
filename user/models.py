@@ -42,6 +42,9 @@ class Hospital(models.Model):
     doctors_requirement = models.IntegerField(default=0)
     nurses_requirement = models.IntegerField(default=0)
 
+    def __unicode__(self):
+        return self.id.email
+
 
 class VenProvider(models.Model):
     id = models.OneToOneField(User, primary_key=True, on_delete=models.CASCADE)
@@ -49,6 +52,9 @@ class VenProvider(models.Model):
     gender = models.CharField(max_length=12, null=True, default=None)
     ventilators_available = models.BooleanField(default=True)
     total_ventilators = models.IntegerField(default=0)
+
+    def __unicode__(self):
+        return self.id.email
 
 
 class CoWorker(models.Model):
@@ -59,6 +65,9 @@ class CoWorker(models.Model):
     working_at = models.OneToOneField(Hospital, related_name='%(class)s_working_at', null=True, default=None, on_delete=models.SET_NULL)
     work_request = models.BooleanField(default=False)
     requested_hospital = models.OneToOneField(Hospital, related_name='%(class)s_requested_hospital', null=True, default=None, on_delete=models.SET_NULL)
+
+    def __unicode__(self):
+        return self.id.email
 
 
 class Patient(models.Model):
@@ -73,3 +82,6 @@ class Patient(models.Model):
     admitted = models.BooleanField(default=False)
     admitted_hospital = models.OneToOneField(Hospital, related_name='%(class)s_admitted_hospital', null=True, default=None, on_delete=models.SET_NULL)
     bed_type = models.IntegerField(default=1)
+
+    def __unicode__(self):
+        return self.id.email
