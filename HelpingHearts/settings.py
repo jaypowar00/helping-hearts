@@ -135,15 +135,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'user.User'
 
 CSRF_COOKIE_DOMAIN = 'helpinghearts-mraj.herokuapp.com'
-# CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_SAMESITE = 'None'
 SESSION_COOKIE_SAMESITE = 'None'
 SESSION_COOKIE_SAMESITE_FORCE_ALL = True
 SESSION_COOKIE_SECURE = True
 CSRF_TRUSTED_ORIGINS = [
-    'http://localhost',
-    'http://127.0.0.1',
-    'https://helpinghearts-mraj.herokuapp.com/',
+    'localhost',
+    '127.0.0.1',
+    'helpinghearts-mraj.herokuapp.com',
 ]
 
 CORS_ORIGIN_WHITELIST = [
