@@ -75,10 +75,10 @@ def retrieve_hospitals(query_params):
             'status': True,
             'next_page': hosp_as_page.next_page_number() if hosp_as_page.has_next() else None,
             'previous_page': hosp_as_page.previous_page_number() if hosp_as_page.has_previous() else None,
-            'total_products': paginator.count,
+            'total_hospitals': paginator.count,
             'total_pages': paginator.num_pages,
             'current_page': hosp_as_page.number,
-            'current_page_products': len(hospital_list),
+            'current_page_hospitals': len(hospital_list),
             'hospitals': hospital_list
         }
     )
