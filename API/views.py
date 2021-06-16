@@ -22,12 +22,8 @@ def get_hospitals_for_patients(request):
     UserModel = get_user_model()
     authorization_header = request.headers.get('Authorization')
     if not authorization_header:
-        return Response(
-            {
-                'status': False,
-                'message': 'Authorization credential missing!',
-            }
-        )
+        response = retrieve_hospitals(query_params)
+        return response
     try:
         access_token = authorization_header.split(' ')[1]
         payload = jwt.decode(access_token, settings.SECRET_KEY, algorithms=['HS256'])
@@ -53,6 +49,11 @@ def get_hospitals_for_patients(request):
                 'message': 'Route is only for Patients/Guests'
             }
         )
+    response = retrieve_hospitals(query_params)
+    return response
+
+
+def retrieve_hospitals(query_params):
     hospitals = Hospital.objects.all()
     if len(hospitals) == 0:
         return Response(
