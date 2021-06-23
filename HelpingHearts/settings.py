@@ -142,13 +142,17 @@ SESSION_COOKIE_SAMESITE_FORCE_ALL = True
 SESSION_COOKIE_SECURE = True
 CSRF_TRUSTED_ORIGINS = [
     'localhost',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
     '127.0.0.1',
     'helpinghearts-mraj.herokuapp.com',
 ]
 
 CORS_ORIGIN_WHITELIST = [
-    'https://localhost',
-    'https://127.0.0.1',
+    'http://localhost',
+    'http://localhost:3000',
+    'http://127.0.0.1',
+    'http://127.0.0.1:3000',
     'https://helpinghearts-mraj.herokuapp.com',
 ]
 CORS_ALLOW_CREDENTIALS = True

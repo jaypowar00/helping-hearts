@@ -276,7 +276,7 @@ def user_login(request):
         'status': True,
         'message': 'successfully logged in',
         'access_token': access_token,
-        # 'refresh_token': refresh_token,
+        'refresh_token': refresh_token,
         'csrf_token': csrf_token,
         'user': serialized_user,
     }
