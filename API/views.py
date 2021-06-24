@@ -22,7 +22,7 @@ def get_hospitals_for_patients(request):
     UserModel = get_user_model()
     authorization_header = request.headers.get('Authorization')
     if not authorization_header:
-        response = retrieve_hospitals(query_params)
+        response = retrieve_hospitals_for_patients(query_params)
         return response
     try:
         access_token = authorization_header.split(' ')[1]
@@ -42,18 +42,21 @@ def get_hospitals_for_patients(request):
                 'message': 'user associated with credentials does not exists anymore',
             }
         )
-    if user.account_type != 1:
-        return Response(
-            {
-                'status': False,
-                'message': 'Route is only for Patients/Guests'
-            }
-        )
-    response = retrieve_hospitals(query_params)
-    return response
+    if user.account_type == 1:
+        return retrieve_hospitals_for_patients(query_params)
+    elif user.account_type == 2:
+        return Response({'success': True, 'message': 'Under development...'})
+    elif user.account_type == 3:
+        return Response({'success': True, 'message': 'Under development...'})
+    elif user.account_type == 4:
+        return Response({'success': True, 'message': 'Under development...'})
+    elif user.account_type == 5:
+        return Response({'success': True, 'message': 'Under development...'})
+    else:
+        return Response({'success': True, 'message': 'Under development...'})
 
 
-def retrieve_hospitals(query_params):
+def retrieve_hospitals_for_patients(query_params):
     hospitals = Hospital.objects.all()
     if len(hospitals) == 0:
         return Response(
@@ -69,6 +72,9 @@ def retrieve_hospitals(query_params):
     hospital_list = []
     for hospital in hosp_as_page:
         hospital.update(UserSerializer(User.objects.filter(id=hospital['id']).first()).data)
+        del hospital['email']
+        del hospital['about']
+        del hospital['account_type']
         hospital_list.append(hospital)
     return Response(
         {
