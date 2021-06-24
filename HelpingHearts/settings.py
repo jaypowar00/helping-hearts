@@ -79,11 +79,11 @@ WSGI_APPLICATION = 'HelpingHearts.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_HH_NAME', 'd1t2a5q297s2nf'),
+        'NAME': os.getenv('DB_HH_NAME', 'postgres'),
         'PORT': os.getenv('DB_HH_PORT', '5432'),
-        'HOST': os.getenv('DB_HH_HOST_URL', 'ec2-54-197-100-79.compute-1.amazonaws.com'),
-        'USER': os.getenv('DB_HH_USERNAME', 'baodjpaiqgdzzv'),
-        'PASSWORD': os.getenv('DB_HH_PASSWORD', '01d24681b2490a8bb512db147eea0b94dc892b179e69e28a5ed1bb8722a701e4')
+        'HOST': os.getenv('DB_HH_HOST_URL', 'localhost'),
+        'USER': os.getenv('DB_HH_USERNAME', 'postgres'),
+        'PASSWORD': os.getenv('DB_HH_PASSWORD', 'super')
     }
 }
 
