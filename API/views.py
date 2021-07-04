@@ -45,6 +45,7 @@ def get_hospitals_for_patients(request):
     if user.account_type == 1:
         return retrieve_hospitals_for_patients(query_params)
     elif user.account_type == 2:
+
         return Response({'success': True, 'message': 'Under development...'})
     elif user.account_type == 3:
         return Response({'success': True, 'message': 'Under development...'})
@@ -94,6 +95,7 @@ def retrieve_hospitals_for_patients(query_params):
 @check_blacklisted_token
 def get_hospital_info(request):
     query_params = dict(request.query_params)
+    print("Query params : ", query_params)
     if 'hid' not in query_params:
         return Response(
             {
@@ -117,3 +119,13 @@ def get_hospital_info(request):
             'hospital': serialized_hospital
         }
     )
+
+# Full List of ventilator providers
+@api_view(['GET'])
+def get_venProviders(request):
+    query_params = dict(request.query_params)
+
+    venProvider = VenProvider.objects.all()
+    serialized_ventilator = VenProviderSerializer(venProvider, many=True).data
+    # print(serialized_ventilator)
+    return Response(serialized_ventilator)
