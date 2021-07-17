@@ -46,6 +46,7 @@ def get_hospitals_for_patients(request):
         return retrieve_hospitals_for_patients(query_params)
     elif user.account_type == 2:
 
+
         return Response({'success': True, 'message': 'Under development...'})
     elif user.account_type == 3:
         return Response({'success': True, 'message': 'Under development...'})
@@ -124,8 +125,95 @@ def get_hospital_info(request):
 @api_view(['GET'])
 def get_venProviders(request):
     query_params = dict(request.query_params)
+    UserModel = get_user_model()
+    authorization_header = request.headers.get('Authorization')
+    if not authorization_header:
+        return Response({
+            'status': False,
+            'message': 'Not logged in(auth credential missing)'
+        })
+    try:
+        access_token = authorization_header.split(' ')[1]
+        payload = jwt.decode(access_token, settings.SECRET_KEY, algorithms=['HS256'])
+    except jwt.ExpiredSignatureError:
+        return Response(
+            {
+                'status': False,
+                'message': 'session expired',
+            }
+        )
+    user = UserModel.objects.filter(id=payload['user_id']).first()
+    if user is None:
+        return Response(
+            {
+                'status': False,
+                'message': 'user associated with credentials does not exists anymore',
+            }
+        )
+    if user.account_type == 2:
+        v_list = []
+        venProviders = VenProvider.objects.all()
+        for venProvider in venProviders:
+            temp = VenProviderSerializer(venProvider).data
+            temp.update(UserSerializer(venProvider.id).data)
+            v_list.append(temp)
+        # serialized_ventilator = VenProviderSerializer(venProvider, many=True).data
+        # print(serialized_ventilator)
+        return Response({
+            'status': True,
+            'Ventilator_Providers': v_list
+        })
+    else:
+        return Response({
+            'status': False,
+            'message': 'Only accessible for the hospitals'
+        })
 
-    venProvider = VenProvider.objects.all()
-    serialized_ventilator = VenProviderSerializer(venProvider, many=True).data
-    # print(serialized_ventilator)
-    return Response(serialized_ventilator)
+@api_view(['GET'])
+def get_coWorkers(request):
+    query_params = dict(request.query_params)
+    UserModel = get_user_model()
+    authorization_header = request.headers.get('Authorization')
+    if not authorization_header:
+        return Response({
+            'status': False,
+            'message': 'Not logged in(auth credential missing)'
+        })
+    try:
+        access_token = authorization_header.split(' ')[1]
+        payload = jwt.decode(access_token, settings.SECRET_KEY, algorithms=['HS256'])
+    except jwt.ExpiredSignatureError:
+        return Response(
+            {
+                'status': False,
+                'message': 'session expired',
+            }
+        )
+    user = UserModel.objects.filter(id=payload['user_id']).first()
+    if user is None:
+        return Response(
+            {
+                'status': False,
+                'message': 'user associated with credentials does not exists anymore',
+            }
+        )
+
+    if user.account_type == 3:
+        coWorkers_list = []
+        coWork = CoWorker.objects.all()
+        for coWorker in coWork:
+            temp = CoWorkerSerializer(coWork).data
+            temp.update(UserSerializer(coWorker.id).data)
+            coWorkers_list.append(temp)
+
+        return Response({
+            'status': True,
+            'Co-workers': coWorkers_list
+        })
+    else:
+        return Response({
+            'status': False,
+            'message': 'Only accessible for Hospitals'
+        })
+
+
