@@ -17,24 +17,15 @@ from django.core.paginator import *
 
 
 @api_view(['GET'])
+@check_blacklisted_token
 def get_hospitals_for_patients(request):
     query_params = dict(request.query_params)
     UserModel = get_user_model()
-    authorization_header = request.headers.get('Authorization')
-    if not authorization_header:
+    user = request.user
+    if not user.is_authenticated:
         response = retrieve_hospitals_for_patients(query_params)
         return response
-    try:
-        access_token = authorization_header.split(' ')[1]
-        payload = jwt.decode(access_token, settings.SECRET_KEY, algorithms=['HS256'])
-    except jwt.ExpiredSignatureError:
-        return Response(
-            {
-                'status': False,
-                'message': 'session expired',
-            }
-        )
-    user = UserModel.objects.filter(id=payload['user_id']).first()
+    user = UserModel.objects.filter(id=user.id).first()
     if user is None:
         return Response(
             {
@@ -44,22 +35,59 @@ def get_hospitals_for_patients(request):
         )
     if user.account_type == 1:
         return retrieve_hospitals_for_patients(query_params)
-    elif user.account_type == 2:
-
-
-        return Response({'success': True, 'message': 'Under development...'})
-    elif user.account_type == 3:
-        return Response({'success': True, 'message': 'Under development...'})
-    elif user.account_type == 4:
-        return Response({'success': True, 'message': 'Under development...'})
-    elif user.account_type == 5:
-        return Response({'success': True, 'message': 'Under development...'})
     else:
-        return Response({'success': True, 'message': 'Under development...'})
+        return Response({'status': False, 'message': 'This feature is only for Guests and Patients!'})
 
 
 def retrieve_hospitals_for_patients(query_params):
     hospitals = Hospital.objects.all()
+    if ('cc_lt' in query_params and query_params['cc_lt'][0].isdigit) or\
+            ('cc_gt' in query_params and query_params['cc_gt'][0].isdigit) or\
+            ('beds_lt' in query_params and query_params['beds_lt'][0].isdigit) or\
+            ('beds_gt' in query_params and query_params['beds_gt'][0].isdigit) or\
+            ('ven_lt' in query_params and query_params['ven_lt'][0].isdigit) or\
+            ('ven_gt' in query_params and query_params['ven_gt'][0].isdigit) or\
+            ('ox_lt' in query_params and query_params['ox_lt'][0].isdigit) or\
+            ('ox_gt' in query_params and query_params['ox_gt'][0].isdigit) or\
+            ('order' in query_params and query_params['order'][0] in ['name_a', 'name_d', 'pin_a', 'pin_d', 'bed_a', 'bed_d', 'ven_a', 'ven_d', 'ox_a', 'ox_d']) or \
+            ('s_name' in query_params and query_params['s_name'][0] != '') or\
+            ('s_pin' in query_params and query_params['s_pin'][0].isdigit):
+        if 's_name' in query_params and query_params['s_name'][0] != '':
+            hospitals = (hospitals & Hospital.objects.filter(id__name__search=query_params['s_name'][0])) |\
+                        (hospitals & Hospital.objects.filter(id__about__search=query_params['s_name'][0])) |\
+                        (hospitals & Hospital.objects.filter(id__name__icontains=query_params['s_name'][0])) |\
+                        (hospitals & Hospital.objects.filter(id__about__icontains=query_params['s_name'][0]))
+        if 's_pin' in query_params and query_params['s_pin'][0].isdigit:
+            hospitals = hospitals & Hospital.objects.filter(id__pincode__search=query_params['s_pin'][0])
+        if 'cc_lt' in query_params and query_params['cc_lt'][0].isdigit:
+            hospitals = hospitals & Hospital.objects.filter(corona_count__lte=query_params['cc_lt'][0])
+        if 'cc_gt' in query_params and query_params['cc_gt'][0].isdigit:
+            hospitals = hospitals & Hospital.objects.filter(corona_count__gte=query_params['cc_gt'][0])
+        if 'beds_lt' in query_params and query_params['beds_lt'][0].isdigit:
+            hospitals = hospitals & Hospital.objects.filter(beds__lte=query_params['beds_lt'][0])
+        if 'beds_gt' in query_params and query_params['beds_gt'][0].isdigit:
+            hospitals = hospitals & Hospital.objects.filter(beds__gte=query_params['beds_gt'][0])
+        if 'ven_lt' in query_params and query_params['ven_lt'][0].isdigit:
+            hospitals = hospitals & Hospital.objects.filter(ventilators__lte=query_params['ven_lt'][0])
+        if 'ven_gt' in query_params and query_params['ven_gt'][0].isdigit:
+            hospitals = hospitals & Hospital.objects.filter(ventilators__gte=query_params['ven_gt'][0])
+        if 'ox_lt' in query_params and query_params['ox_lt'][0].isdigit:
+            hospitals = hospitals & Hospital.objects.filter(oxygens__lte=query_params['ox_lt'][0])
+        if 'ox_gt' in query_params and query_params['ox_gt'][0].isdigit:
+            hospitals = hospitals & Hospital.objects.filter(oxygens__gte=query_params['ox_gt'][0])
+        if 'order' in query_params and query_params['order'][0] in ['name_a', 'name_d', 'pin_a', 'pin_d', 'bed_a', 'bed_d', 'ven_a', 'ven_d', 'ox_a', 'ox_d']:
+            order = '-' if query_params['order'][0].split('_')[1] == 'd' else ''
+            orderby = query_params['order'][0].split('_')[0]
+            if orderby == 'name':
+                hospitals = Hospital.objects.order_by(order+'id__name')
+            elif orderby == 'pin':
+                hospitals = Hospital.objects.order_by(order+'id__pincode')
+            elif orderby == 'bed':
+                hospitals = Hospital.objects.order_by(order+'beds')
+            elif orderby == 'ven':
+                hospitals = Hospital.objects.order_by(order+'ventilators')
+            elif orderby == 'pox':
+                hospitals = Hospital.objects.order_by(order+'oxygens')
     if len(hospitals) == 0:
         return Response(
             {
@@ -69,7 +97,7 @@ def retrieve_hospitals_for_patients(query_params):
         )
     serialized_hospitals = HospitalSerializer(hospitals, many=True).data
     paginator = Paginator(serialized_hospitals, 30)
-    page_no = query_params['page'][0] if 'page' in query_params else 1
+    page_no = query_params['page'][0] if ('page' in query_params and query_params['page'][0].isdigit) else 1
     hosp_as_page = paginator.get_page(page_no)
     hospital_list = []
     for hospital in hosp_as_page:
@@ -121,28 +149,19 @@ def get_hospital_info(request):
         }
     )
 
+
 # Full List of ventilator providers
 @api_view(['GET'])
-def get_venProviders(request):
+def get_ven_providers(request):
     query_params = dict(request.query_params)
     UserModel = get_user_model()
-    authorization_header = request.headers.get('Authorization')
-    if not authorization_header:
+    user = request.user
+    if not user.is_authenticated:
         return Response({
             'status': False,
-            'message': 'Not logged in(auth credential missing)'
+            'message': 'Not logged in',
         })
-    try:
-        access_token = authorization_header.split(' ')[1]
-        payload = jwt.decode(access_token, settings.SECRET_KEY, algorithms=['HS256'])
-    except jwt.ExpiredSignatureError:
-        return Response(
-            {
-                'status': False,
-                'message': 'session expired',
-            }
-        )
-    user = UserModel.objects.filter(id=payload['user_id']).first()
+    user = UserModel.objects.filter(id=user.id).first()
     if user is None:
         return Response(
             {
@@ -169,27 +188,18 @@ def get_venProviders(request):
             'message': 'Only accessible for the hospitals'
         })
 
+
 @api_view(['GET'])
-def get_coWorkers(request):
+def get_co_workers(request):
     query_params = dict(request.query_params)
     UserModel = get_user_model()
-    authorization_header = request.headers.get('Authorization')
-    if not authorization_header:
+    user = request.user
+    if not user.is_authenticated:
         return Response({
             'status': False,
-            'message': 'Not logged in(auth credential missing)'
+            'message': 'Not logged in',
         })
-    try:
-        access_token = authorization_header.split(' ')[1]
-        payload = jwt.decode(access_token, settings.SECRET_KEY, algorithms=['HS256'])
-    except jwt.ExpiredSignatureError:
-        return Response(
-            {
-                'status': False,
-                'message': 'session expired',
-            }
-        )
-    user = UserModel.objects.filter(id=payload['user_id']).first()
+    user = UserModel.objects.filter(id=user.id).first()
     if user is None:
         return Response(
             {
@@ -198,7 +208,7 @@ def get_coWorkers(request):
             }
         )
 
-    if user.account_type == 3:
+    if user.account_type == 2:
         coWorkers_list = []
         coWork = CoWorker.objects.all()
         for coWorker in coWork:
@@ -208,12 +218,10 @@ def get_coWorkers(request):
 
         return Response({
             'status': True,
-            'Co-workers': coWorkers_list
+            'co_workers': coWorkers_list
         })
     else:
         return Response({
             'status': False,
             'message': 'Only accessible for Hospitals'
         })
-
-

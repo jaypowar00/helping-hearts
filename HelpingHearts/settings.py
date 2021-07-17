@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'user',
     'API',
+    'django.contrib.postgres',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -167,6 +168,7 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'user.authentication.SafeJWTAuthentication'
+        'user.authentication.SafeJWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ]
 }
