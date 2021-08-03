@@ -158,8 +158,12 @@ def get_ven_providers(request):
     UserModel = get_user_model()
     user = request.user
     if not user.is_authenticated:
-        response = retrieve_all_ventilator_providers(query_params)
-        return response
+        return Response(
+            {
+                'status': False,
+                'message': 'user is not logged in',
+            }
+        )
     user = UserModel.objects.filter(id=user.id).first()
     if user is None:
         return Response(
@@ -190,7 +194,7 @@ def retrieve_all_ventilator_providers(query_params):
                             (venProviders & VenProvider.objects.filter(id__about__icontains=query_params['p_name'][0]))
 
         if 'ven_lt' in query_params and query_params['ven_lt'][0].isdigit:
-            venProviders = venProviders & VenProvider.objects.filter(total_ventilators__lte=query_params['p_name'][0])
+            venProviders = venProviders & VenProvider.objects.filter(total_ventilators__lte=query_params['ven_lt'][0])
 
         if 'ven_gt' in query_params and query_params['ven_gt'][0].isdigit:
             venProviders = venProviders & VenProvider.objects.filter(total_ventilators__gte=query_params['ven_gt'][0])
@@ -209,8 +213,6 @@ def retrieve_all_ventilator_providers(query_params):
     venProvider_list = []
     for venProvider in venpro_as_page:
         venProvider.update(UserSerializer(User.objects.filter(id=venProvider['id']).first()).data)
-        del venProvider['email']
-        del venProvider['about']
         del venProvider['account_type']
         venProvider_list.append(venProvider)
 
@@ -221,8 +223,8 @@ def retrieve_all_ventilator_providers(query_params):
             'privious_page': venpro_as_page.previous_page_number() if venpro_as_page.has_next() else None,
             'total_ventilator_providers': paginator.count,
             'total_pages': paginator.num_pages,
-            'current_page_hospitals': len(venProvider_list),
-            'hospitals': venProvider_list
+            'current_page_ventilatos_providers': len(venProvider_list),
+            'Ventilator_providers': venProvider_list
         }
     )
 
@@ -234,8 +236,12 @@ def get_co_workers(request):
     UserModel = get_user_model()
     user = request.user
     if not user.is_authenticated:
-        response = retrieve_co_workers(query_params)
-        return response
+        return Response(
+            {
+                'status': False,
+                'message': 'user is not logged in',
+            }
+        )
     user = UserModel.objects.filter(id=user.id).first()
     if user is None:
         return Response(
@@ -255,25 +261,10 @@ def get_co_workers(request):
             }
         )
 
-    #     coWorkers_list = []
-    #     coWork = CoWorker.objects.all()
-    #     for coWorker in coWork:
-    #         temp = CoWorkerSerializer(coWork).data
-    #         temp.update(UserSerializer(coWorker.id).data)
-    #         coWorkers_list.append(temp)
-    #
-    #     return Response({
-    #         'status': True,
-    #         'co_workers': coWorkers_list
-    #     })
-    # else:
-    #     return Response({
-    #         'status': False,
-    #         'message': 'Only accessible for Hospitals'
-    #     })
+
 def retrieve_co_workers(query_params):
     coworkers = CoWorker.objects.all()
-    if ('avail' in query_params and query_params['avail'][0]==('T' or 'F')) or\
+    if ('avail' in query_params and query_params['avail'][0] == ('T' or 'F')) or\
             ('c_name' in query_params and query_params['c_name'][0] != ''):
         if 'c_name' in query_params and query_params['c_name'][0] != '':
             coworkers = (coworkers & CoWorker.objects.filter(id__name__search=query_params['c_name'][0])) | \
@@ -281,8 +272,8 @@ def retrieve_co_workers(query_params):
                         (coworkers & CoWorker.objects.filter(id__name__icontains=query_params['c_name'][0])) | \
                         (coworkers & CoWorker.objects.filter(id__about__icontains=query_params['c_name'][0]))
 
-        if 'avail' in query_params and query_params['avail'][0]==('T' or 'F'):
-            coworkers = coworkers & CoWorker.objects.filter(available=True)
+        if 'avail' in query_params and query_params['avail'][0] in ['T', 'F']:
+            coworkers = coworkers & CoWorker.objects.filter(available=query_params['avail'][0] == 'T')
 
     if len(coworkers) == 0:
         return Response(
@@ -300,8 +291,6 @@ def retrieve_co_workers(query_params):
 
     for coworker in cowork_as_page:
         coworker.update(UserSerializer(User.objects.filter(id=coworker['id']).first()).data)
-        del coworker['email']
-        del coworker['about']
         del coworker['account_type']
         coworker_list.append(coworker)
 
@@ -312,7 +301,7 @@ def retrieve_co_workers(query_params):
             'privious_page': cowork_as_page.previous_page_number() if cowork_as_page.has_next() else None,
             'total_co_workers': paginator.count,
             'total_pages': paginator.num_pages,
-            'current_page_hospitals': len(coworker_list),
-            'hospitals': coworker_list
+            'current_page_Coworker': len(coworker_list),
+            'Cowrkers': coworker_list
         }
     )
