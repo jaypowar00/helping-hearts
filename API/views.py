@@ -97,7 +97,7 @@ def retrieve_hospitals_for_patients(query_params):
             }
         )
     serialized_hospitals = HospitalSerializer(hospitals, many=True).data
-    paginator = Paginator(serialized_hospitals, 30)
+    paginator = Paginator(serialized_hospitals, 5)
     page_no = query_params['page'][0] if ('page' in query_params and query_params['page'][0].isdigit) else 1
     hosp_as_page = paginator.get_page(page_no)
     hospital_list = []
