@@ -147,6 +147,7 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:3000',
     '127.0.0.1',
     'helpinghearts-mraj.herokuapp.com',
+    'https://helpinghearts-mraj.netlify.app/',
 ]
 
 CORS_ORIGIN_WHITELIST = [
@@ -155,6 +156,7 @@ CORS_ORIGIN_WHITELIST = [
     'http://127.0.0.1',
     'http://127.0.0.1:3000',
     'https://helpinghearts-mraj.herokuapp.com',
+    'https://helpinghearts-mraj.netlify.app/',
 ]
 
 CORS_ALLOW_CREDENTIALS = True
