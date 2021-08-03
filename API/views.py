@@ -87,7 +87,7 @@ def retrieve_hospitals_for_patients(query_params):
                 hospitals = Hospital.objects.order_by(order+'beds')
             elif orderby == 'ven':
                 hospitals = Hospital.objects.order_by(order+'ventilators')
-            elif orderby == 'pox':
+            elif orderby == 'ox':
                 hospitals = Hospital.objects.order_by(order+'oxygens')
     if len(hospitals) == 0:
         return Response(
