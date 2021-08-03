@@ -20,6 +20,7 @@ from django.core.paginator import *
 @check_blacklisted_token
 def get_hospitals_for_patients(request):
     query_params = dict(request.query_params)
+    print(query_params)
     UserModel = get_user_model()
     user = request.user
     if not user.is_authenticated:
@@ -157,10 +158,8 @@ def get_ven_providers(request):
     UserModel = get_user_model()
     user = request.user
     if not user.is_authenticated:
-        return Response({
-            'status': False,
-            'message': 'Not logged in',
-        })
+        response = retrieve_all_ventilator_providers(query_params)
+        return response
     user = UserModel.objects.filter(id=user.id).first()
     if user is None:
         return Response(
@@ -170,23 +169,63 @@ def get_ven_providers(request):
             }
         )
     if user.account_type == 2:
-        v_list = []
-        venProviders = VenProvider.objects.all()
-        for venProvider in venProviders:
-            temp = VenProviderSerializer(venProvider).data
-            temp.update(UserSerializer(venProvider.id).data)
-            v_list.append(temp)
-        # serialized_ventilator = VenProviderSerializer(venProvider, many=True).data
-        # print(serialized_ventilator)
-        return Response({
-            'status': True,
-            'Ventilator_Providers': v_list
-        })
+        return retrieve_all_ventilator_providers(query_params)
     else:
-        return Response({
-            'status': False,
-            'message': 'Only accessible for the hospitals'
-        })
+        return Response(
+            {
+                'status': False,
+                'message': 'Only accessible for the hospitals'
+            }
+        )
+
+def retrieve_all_ventilator_providers(query_params):
+    venProviders = VenProvider.objects.all()
+    if ('ven_lt' in query_params and query_params['ven_lt'][0].isdigit) or\
+            ('ven_gt' in query_params and query_params['ven_gt'][0].isdigit) or\
+            ('p_name' in query_params and query_params['p_name'][0] != ''):
+        if 'p_name' in query_params and query_params['p_name'][0] != '':
+            venProviders = (venProviders & VenProvider.objects.filter(id__name__search=query_params['p_name'][0])) |\
+                           (venProviders & VenProvider.objects.filter(id__about__search=query_params['p_name'][0])) | \
+                           (venProviders & VenProvider.objects.filter(id__name__icontains=query_params['p_name'][0])) |\
+                            (venProviders & VenProvider.objects.filter(id__about__icontains=query_params['p_name'][0]))
+
+        if 'ven_lt' in query_params and query_params['ven_lt'][0].isdigit:
+            venProviders = venProviders & VenProvider.objects.filter(total_ventilators__lte=query_params['p_name'][0])
+
+        if 'ven_gt' in query_params and query_params['ven_gt'][0].isdigit:
+            venProviders = venProviders & VenProvider.objects.filter(total_ventilators__gte=query_params['ven_gt'][0])
+
+    if len(venProviders) == 0:
+        return Response(
+            {
+                'status': False,
+                'message': 'There are no Ventilator Providers'
+            }
+        )
+    serialized_venProviders = VenProviderSerializer(venProviders, many=True).data
+    paginator = Paginator(serialized_venProviders, 30)
+    page_no = query_params['page'][0] if ('page' in query_params and query_params['page'][0].isdigit) else 1
+    venpro_as_page = paginator.get_page(page_no)
+    venProvider_list = []
+    for venProvider in venpro_as_page:
+        venProvider.update(UserSerializer(User.objects.filter(id=venProvider['id']).first()).data)
+        del venProvider['email']
+        del venProvider['about']
+        del venProvider['account_type']
+        venProvider_list.append(venProvider)
+
+    return Response(
+        {
+            'status': True,
+            'next_page': venpro_as_page.next_page_number() if venpro_as_page.has_next() else None,
+            'privious_page': venpro_as_page.previous_page_number() if venpro_as_page.has_next() else None,
+            'total_ventilator_providers': paginator.count,
+            'total_pages': paginator.num_pages,
+            'current_page_hospitals': len(venProvider_list),
+            'hospitals': venProvider_list
+        }
+    )
+
 
 
 @api_view(['GET'])
@@ -195,10 +234,8 @@ def get_co_workers(request):
     UserModel = get_user_model()
     user = request.user
     if not user.is_authenticated:
-        return Response({
-            'status': False,
-            'message': 'Not logged in',
-        })
+        response = retrieve_co_workers(query_params)
+        return response
     user = UserModel.objects.filter(id=user.id).first()
     if user is None:
         return Response(
@@ -209,19 +246,73 @@ def get_co_workers(request):
         )
 
     if user.account_type == 2:
-        coWorkers_list = []
-        coWork = CoWorker.objects.all()
-        for coWorker in coWork:
-            temp = CoWorkerSerializer(coWork).data
-            temp.update(UserSerializer(coWorker.id).data)
-            coWorkers_list.append(temp)
-
-        return Response({
-            'status': True,
-            'co_workers': coWorkers_list
-        })
+        return retrieve_co_workers(query_params)
     else:
-        return Response({
-            'status': False,
-            'message': 'Only accessible for Hospitals'
-        })
+        return Response(
+            {
+                'status': False,
+                'message': 'Accessible for hospitals'
+            }
+        )
+
+    #     coWorkers_list = []
+    #     coWork = CoWorker.objects.all()
+    #     for coWorker in coWork:
+    #         temp = CoWorkerSerializer(coWork).data
+    #         temp.update(UserSerializer(coWorker.id).data)
+    #         coWorkers_list.append(temp)
+    #
+    #     return Response({
+    #         'status': True,
+    #         'co_workers': coWorkers_list
+    #     })
+    # else:
+    #     return Response({
+    #         'status': False,
+    #         'message': 'Only accessible for Hospitals'
+    #     })
+def retrieve_co_workers(query_params):
+    coworkers = CoWorker.objects.all()
+    if ('avail' in query_params and query_params['avail'][0]==('T' or 'F')) or\
+            ('c_name' in query_params and query_params['c_name'][0] != ''):
+        if 'c_name' in query_params and query_params['c_name'][0] != '':
+            coworkers = (coworkers & CoWorker.objects.filter(id__name__search=query_params['c_name'][0])) | \
+                        (coworkers & CoWorker.objects.filter(id__about__search=query_params['c_name'][0])) | \
+                        (coworkers & CoWorker.objects.filter(id__name__icontains=query_params['c_name'][0])) | \
+                        (coworkers & CoWorker.objects.filter(id__about__icontains=query_params['c_name'][0]))
+
+        if 'avail' in query_params and query_params['avail'][0]==('T' or 'F'):
+            coworkers = coworkers & CoWorker.objects.filter(available=True)
+
+    if len(coworkers) == 0:
+        return Response(
+            {
+                'status': False,
+                'message': 'Co-Worker is not available'
+            }
+        )
+
+    serialized_coworkers = CoWorkerSerializer(coworkers, many=True).data
+    paginator = Paginator(serialized_coworkers, 30)
+    page_no = query_params['page'][0] if ('page' in query_params and query_params['page'][0].isdigit) else 1
+    cowork_as_page = paginator.get_page(page_no)
+    coworker_list = []
+
+    for coworker in cowork_as_page:
+        coworker.update(UserSerializer(User.objects.filter(id=coworker['id']).first()).data)
+        del coworker['email']
+        del coworker['about']
+        del coworker['account_type']
+        coworker_list.append(coworker)
+
+    return Response(
+        {
+            'status': True,
+            'next_page': cowork_as_page.next_page_number() if cowork_as_page.has_next() else None,
+            'privious_page': cowork_as_page.previous_page_number() if cowork_as_page.has_next() else None,
+            'total_co_workers': paginator.count,
+            'total_pages': paginator.num_pages,
+            'current_page_hospitals': len(coworker_list),
+            'hospitals': coworker_list
+        }
+    )
