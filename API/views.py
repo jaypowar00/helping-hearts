@@ -131,9 +131,15 @@ def get_hospital_info(request):
             {
                 'status': False,
                 'message': 'hospital id missing'
+            })
+    hid = query_params['hid'][0]
+    if not hid.isdigit:
+        return Response(
+            {
+                'status': False,
+                'message': 'invalid hospital id'
             }
         )
-    hid = query_params['hid']
     hospital = Hospital.objects.filter(id=hid).first()
     if not hospital:
         return Response(
