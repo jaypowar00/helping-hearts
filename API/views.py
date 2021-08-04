@@ -149,7 +149,7 @@ def get_hospital_info(request):
             }
         )
     serialized_hospital = HospitalSerializer(hospital).data
-    user = User.objects.filter(id=hospital.id).first()
+    user = User.objects.filter(id=hospital.id.id).first()
     serialized_user = UserSerializer(user).data
     serialized_hospital.update(serialized_user)
     return Response(
