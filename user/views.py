@@ -515,16 +515,18 @@ def user_modify(request):
             }
         )
     try:
+        print('[+] in try')
         UserModel = get_user_model()
         user = UserModel.objects.filter(id=user.id).first()
-        if not user.check_password(jsn['password']):
-            return Response(
-                {
-                    'status': False,
-                    'message': 'wrong password'
-                }
-            )
+        print('[+] in try 2')
         if 'new_password' in jsn:
+            if not user.check_password(jsn['password']):
+                return Response(
+                    {
+                        'status': False,
+                        'message': 'wrong password'
+                    }
+                )
             user.set_password(jsn['new_password'])
         user.name = jsn['name'] if 'name' in jsn else user.name
         user.phone = jsn['phone'] if 'phone' in jsn else user.phone
