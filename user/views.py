@@ -532,15 +532,17 @@ def user_modify(request):
         user.pincode = jsn['pincode'] if 'pincode' in jsn else user.pincode
         user.about = jsn['about'] if 'about' in jsn else user.about
         user.save()
+        print('[+] user updated')
         if user.account_type == 1:
             patient = Patient.objects.filter(id=user.id).first()
-            patient.age = jsn['age'] if 'age' in jsn else patient.age
+            patient.age = int(jsn['age']) if 'age' in jsn else patient.age
             patient.gender = jsn['gender'] if 'gender' in jsn else patient.gender
             patient.health_status = jsn['diseases'] if 'diseases' in jsn else patient.health_status
             patient.ct_scan_score = jsn['ct_scan_score'] if 'ct_scan_score' in jsn else patient.ct_scan_score
             patient.ct_scan_document = jsn['ct_scan_document'] if 'ct_scan_document' in jsn else patient.ct_scan_document
             patient.admitted = jsn['admitted'] if 'admitted' in jsn else patient.admitted
             patient.admit_request = jsn['admit_request'] if 'admit_request' in jsn else patient.admit_request
+            print('[+] patient attributes updated')
             if 'requested_hospital' in jsn:
                 hospital = Hospital.objects.filter(id=jsn['requested_hospital']).first()
                 requested_hospital = hospital if hospital else None
@@ -551,6 +553,7 @@ def user_modify(request):
                 patient.admitted_hospital = admitted_hospital
             patient.bed_type = jsn['bed_type'] if 'bed_type' in jsn else patient.bed_type
             patient.save()
+            print('[+] patient updated')
         elif user.account_type == 2:
             hospital = Hospital.objects.filter(id=user.id).first()
             hospital.corona_count = jsn['c_count'] if 'c_count' in jsn else hospital.corona_count
