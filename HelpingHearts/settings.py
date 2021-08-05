@@ -157,8 +157,8 @@ CORS_ORIGIN_WHITELIST = [
     'http://127.0.0.1',
     'http://127.0.0.1:3000',
     'https://helpinghearts-mraj.herokuapp.com',
-    'https://helpinghearts-mraj.netlify.app/',
-    'http://192.168.56.1:3000/',
+    'https://helpinghearts-mraj.netlify.app',
+    'http://192.168.56.1:3000',
 ]
 
 CORS_ALLOW_CREDENTIALS = True

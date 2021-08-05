@@ -80,15 +80,15 @@ def retrieve_hospitals_for_patients(query_params):
             order = '-' if query_params['order'][0].split('_')[1] == 'd' else ''
             orderby = query_params['order'][0].split('_')[0]
             if orderby == 'name':
-                hospitals = Hospital.objects.order_by(order+'id__name')
+                hospitals &= Hospital.objects.order_by(order+'id__name')
             elif orderby == 'pin':
-                hospitals = Hospital.objects.order_by(order+'id__pincode')
+                hospitals &= Hospital.objects.order_by(order+'id__pincode')
             elif orderby == 'bed':
-                hospitals = Hospital.objects.order_by(order+'beds')
+                hospitals &= Hospital.objects.order_by(order+'beds')
             elif orderby == 'ven':
-                hospitals = Hospital.objects.order_by(order+'ventilators')
+                hospitals &= Hospital.objects.order_by(order+'ventilators')
             elif orderby == 'ox':
-                hospitals = Hospital.objects.order_by(order+'oxygens')
+                hospitals &= Hospital.objects.order_by(order+'oxygens')
     if len(hospitals) == 0:
         return Response(
             {
