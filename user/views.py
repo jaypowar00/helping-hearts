@@ -25,7 +25,7 @@ def user_profile(request):
             patient = Patient.objects.filter(id=user.id).first()
             serialized_patient = PatientSerializer(patient).data
             if serialized_patient['requested_hospital']:
-                hospital = Hospital.objects.filter(id=patient.requested_hospital).first()
+                hospital = Hospital.objects.filter(id=patient.requested_hospital.id).first()
                 if hospital:
                     serialized_patient['requested_hospital'] = {
                         'id': hospital.id,
