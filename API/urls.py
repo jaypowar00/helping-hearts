@@ -10,6 +10,7 @@ urlpatterns = [
     url(r'^hospital/get-patients/$', views.get_patients, name='get_patients_for_hospitals'),
     url(r'^hospital/get-admitted-patients/$', views.get_admitted_patients, name='get_admited_patients_for_hospitals'),
     url(r'^patient/submit-request/$', views.submit_request, name='submit_request'),
+    url(r'^patient/cancel-request/$', views.cancel_admit_request, name='cancel_request'),
     url(r'^patient/answer-request/$', views.respond_patient_request, name='answer_request'),
     url(r'^patient/discharge/$', views.discharge_patient, name='discharge_patient'),
 ]

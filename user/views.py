@@ -18,6 +18,13 @@ from .models import User, Patient, VenProvider, CoWorker, Hospital
 @check_blacklisted_token
 def user_profile(request):
     user = request.user
+    if not user.is_authenticated:
+        return Response(
+            {
+                'status': False,
+                'message': 'not logged in!'
+            }
+        )
     try:
         print('1')
         user = User.objects.filter(id=user.id).first()

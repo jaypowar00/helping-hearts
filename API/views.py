@@ -535,6 +535,13 @@ def submit_request(request):
                 'message': 'Patient can not submit another request while previous one is pending'
             }
         )
+    if patient.admitted:
+        return Response(
+            {
+                'status': False,
+                'message': 'Already Admitted Patients can not submit admit request'
+            }
+        )
     patient.requested_hospital = hospital
     patient.admit_request = True
     patient.save()
@@ -606,3 +613,23 @@ def discharge_patient(request):
     )
 
 
+@api_view(['POST'])
+@check_blacklisted_token
+def cancel_admit_request(request):
+    user = request.user
+    if not user.is_authenticated:
+        return Response(
+            {
+                'status': False,
+                'message': 'Not logged in!'
+            }
+        )
+    patient = user.patient
+    patient.admit_request = False
+    patient.requested_hospital = None
+    return Response(
+        {
+            'status': True,
+            'message': 'Cancelled Admit Request!'
+        }
+    )
