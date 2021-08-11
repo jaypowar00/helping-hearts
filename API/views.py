@@ -349,3 +349,260 @@ def get_patients(request):
             'patients': patients
         }
     )
+
+
+@api_view(['GET'])
+@check_blacklisted_token
+def get_admitted_patients(request):
+    user = request.user
+    if not user.is_authenticated:
+        return Response(
+            {
+                'status': False,
+                'message': 'Not logged in'
+            }
+        )
+    user = User.objects.filter(id=user.id).first()
+    if user.account_type != 2:
+        return Response(
+            {
+                'status': False,
+                'message': 'This feature is only for hospitals'
+            }
+        )
+    hospital = user.hospital
+    requested_patients = hospital.patient_admitted_hospital
+    patients = []
+    for patient in requested_patients.all():
+        ser_patient = PatientSerializer(patient).data
+        ser_patient.update(UserSerializer(User.objects.filter(id=ser_patient['id']).first()).data)
+        patients.append(ser_patient)
+
+    return Response(
+        {
+            'status': True,
+            'patients': patients
+        }
+    )
+
+
+@api_view(['POST'])
+@check_blacklisted_token
+def respond_patient_request(request):
+    query_params = dict(request.query_params)
+    user = request.user
+    if not user.is_authenticated:
+        return Response(
+            {
+                'status': False,
+                'message': 'Not logged in'
+            }
+        )
+    if user.account_type != 2:
+        return Response(
+            {
+                'status': False,
+                'message': 'This feature is only for hospitals'
+            }
+        )
+    jsn = request.data
+    if ('accept' not in jsn) or not ('pid' in jsn and type(jsn['pid']) == int):
+        return Response(
+            {
+                'status': False,
+                'message': 'Missing data in request'
+            }
+        )
+    pid = jsn['pid']
+    patient = Patient.objects.filter(id=pid).first()
+    hospital = user.hospital
+    if not patient:
+        return Response(
+            {
+                'status': False,
+                'message': 'Patient does not exists!'
+            }
+        )
+    if jsn['accept']:
+        patient.admitted_hospital = patient.requested_hospital
+        patient.requested_hospital = None
+        patient.admit_request = False
+        patient.admitted = True
+        patient.save()
+        if patient.bed_type == 1:
+            if hospital.beds > 0:
+                hospital.beds -= 1
+                hospital.corona_count += 1
+                hospital.save()
+            else:
+                return Response(
+                    {
+                        'status': False,
+                        'message': 'Not enough required beds remaining to admit the patient!'
+                    }
+                )
+        elif patient.bed_type == 2:
+            if hospital.beds > 0 and hospital.ventilators > 0:
+                hospital.beds -= 1
+                hospital.ventilators -= 1
+                hospital.corona_count += 1
+                hospital.save()
+            else:
+                return Response(
+                    {
+                        'status': False,
+                        'message': 'Not enough required beds remaining to admit the patient!'
+                    }
+                )
+        else:
+            if hospital.beds > 0 and hospital.oxygens > 0:
+                hospital.beds -= 1
+                hospital.oxygens -= 1
+                hospital.corona_count += 1
+                hospital.save()
+            else:
+                return Response(
+                    {
+                        'status': False,
+                        'message': 'Not enough required beds remaining to admit the patient!'
+                    }
+                )
+        return Response(
+            {
+                'status': True,
+                'message': 'Patient Successfully admitted!'
+            }
+        )
+    else:
+        patient.requested_hospital = None
+        patient.admit_request = False
+        patient.save()
+        return Response(
+            {
+                'status': True,
+                'message': 'Patients admit request declined!'
+            }
+        )
+
+
+@api_view(['POST'])
+@check_blacklisted_token
+def submit_request(request):
+    jsn = request.data
+    user = request.user
+    if not user.is_authenticated:
+        return Response(
+            {
+                'status': False,
+                'message': 'Not logged in'
+            }
+        )
+    if user.account_type != 1:
+        return Response(
+            {
+                'status': False,
+                'message': 'This feature is only for Patients'
+            }
+        )
+    user = User.objects.filter(id=user.id).first()
+    if not user:
+        return Response(
+            {
+                'status': False,
+                'message': 'User not found!'
+            }
+        )
+    patient = user.patient
+    if not ('hid' in jsn and type(jsn['hid']) == int):
+        return Response(
+            {
+                'status': False,
+                'message': 'Missing data in request'
+            }
+        )
+    hospital = Hospital.objects.filter(id=jsn['hid']).first()
+    if not hospital:
+        return Response(
+            {
+                'status': False,
+                'message': 'requesting hospital does not exists!'
+            }
+        )
+    if patient.admit_request:
+        return Response(
+            {
+                'status': False,
+                'message': 'Patient can not submit another request while previous one is pending'
+            }
+        )
+    patient.requested_hospital = hospital
+    patient.admit_request = True
+    patient.save()
+    return Response(
+        {
+            'status': True,
+            'message': 'Admit request submitted!'
+        }
+    )
+
+
+@api_view(['POST'])
+@check_blacklisted_token
+def discharge_patient(request):
+    jsn = request.data
+    user = request.user
+    if not user.is_authenticated:
+        return Response(
+            {
+                'status': False,
+                'message': 'Not logged in'
+            }
+        )
+    if user.account_type != 2:
+        return Response(
+            {
+                'status': False,
+                'message': 'This feature is only for hospitals'
+            }
+        )
+    if 'pid' not in jsn:
+        return Response(
+            {
+                'status': False,
+                'message': 'Missing data in request'
+            }
+        )
+    hospital = user.hospital
+    patient = Patient.objects.filter(id=jsn['pid']).first()
+    if not patient:
+        return Response(
+            {
+                'status': False,
+                'message': 'requested patient does not exists any more!'
+            }
+        )
+    patient.admitted = False
+    patient.admitted_hospital = None
+    patient.save()
+    if patient.bed_type == 1:
+        hospital.beds += 1
+        hospital.corona_count -= 1
+        hospital.save()
+    elif patient.bed_type == 2:
+        hospital.beds += 1
+        hospital.ventilators += 1
+        hospital.corona_count -= 1
+        hospital.save()
+    else:
+        hospital.beds += 1
+        hospital.oxygens += 1
+        hospital.corona_count -= 1
+        hospital.save()
+    return Response(
+        {
+            'status': True,
+            'message': 'Patient discharged!'
+        }
+    )
+
+
