@@ -314,3 +314,38 @@ def retrieve_co_workers(query_params):
             'Cowrkers': coworker_list
         }
     )
+
+
+@api_view(['GET'])
+@check_blacklisted_token
+def get_patients(request):
+    user = request.user
+    if not user.is_authenticated:
+        return Response(
+            {
+                'status': False,
+                'message': 'Not logged in'
+            }
+        )
+    user = User.objects.filter(id=user.id).first()
+    if user.account_type != 2:
+        return Response(
+            {
+                'status': False,
+                'message': 'This feature is only for hospitals'
+            }
+        )
+    hospital = user.hospital
+    requested_patients = hospital.patient_requested_hospital
+    patients = []
+    for patient in requested_patients.order_by('-ct_scan_score'):
+        ser_patient = PatientSerializer(patient).data
+        ser_patient.update(UserSerializer(User.objects.filter(id=ser_patient['id']).first()).data)
+        patients.append(ser_patient)
+
+    return Response(
+        {
+            'status': True,
+            'patients': patients
+        }
+    )

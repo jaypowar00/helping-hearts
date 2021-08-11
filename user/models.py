@@ -69,9 +69,9 @@ class CoWorker(models.Model):
     age = models.IntegerField(null=True, default=None, blank=True)
     gender = models.CharField(max_length=12, null=True, default=None, blank=True)
     available = models.BooleanField(default=True)
-    working_at = models.OneToOneField(Hospital, related_name='%(class)s_working_at', null=True, default=None, on_delete=models.SET_NULL, blank=True)
+    working_at = models.ForeignKey(Hospital, related_name='%(class)s_working_at', null=True, default=None, on_delete=models.SET_NULL, blank=True)
     work_request = models.BooleanField(default=False)
-    requested_hospital = models.OneToOneField(Hospital, related_name='%(class)s_requested_hospital', null=True, default=None, on_delete=models.SET_NULL, blank=True)
+    requested_hospital = models.ForeignKey(Hospital, related_name='%(class)s_requested_hospital', null=True, default=None, on_delete=models.SET_NULL, blank=True)
 
     def __unicode__(self):
         return self.id.email
@@ -88,9 +88,9 @@ class Patient(models.Model):
     ct_scan_score = models.FloatField(null=True, default=None, blank=True)
     ct_scan_document = models.TextField(null=True, default=None, blank=True)
     admit_request = models.BooleanField(default=False)
-    requested_hospital = models.OneToOneField(Hospital, related_name='%(class)s_requested_hospital', null=True, default=None, on_delete=models.SET_NULL, blank=True)
+    requested_hospital = models.ForeignKey(Hospital, related_name='%(class)s_requested_hospital', null=True, default=None, on_delete=models.SET_NULL, blank=True)
     admitted = models.BooleanField(default=False)
-    admitted_hospital = models.OneToOneField(Hospital, related_name='%(class)s_admitted_hospital', null=True, default=None, on_delete=models.SET_NULL, blank=True)
+    admitted_hospital = models.ForeignKey(Hospital, related_name='%(class)s_admitted_hospital', null=True, default=None, on_delete=models.SET_NULL, blank=True)
     bed_type = models.IntegerField(default=1, validators=[MinValueValidator(1), MaxValueValidator(3)])
 
     def __unicode__(self):
