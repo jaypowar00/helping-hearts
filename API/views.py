@@ -627,6 +627,7 @@ def cancel_admit_request(request):
     patient = user.patient
     patient.admit_request = False
     patient.requested_hospital = None
+    patient.save()
     return Response(
         {
             'status': True,
