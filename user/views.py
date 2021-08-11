@@ -26,19 +26,14 @@ def user_profile(request):
             }
         )
     try:
-        print('1')
         user = User.objects.filter(id=user.id).first()
         serialized_user = UserSerializer(user).data
         ac_type = serialized_user['account_type']
         if ac_type == 1:
-            print('2')
             patient = Patient.objects.filter(id=user.id).first()
             serialized_patient = PatientSerializer(patient).data
-            print('3')
             if serialized_patient['requested_hospital']:
-                print('4')
                 hospital = Hospital.objects.filter(id=patient.requested_hospital.id).first()
-                print('5')
                 if hospital:
                     serialized_patient['requested_hospital'] = {
                         'id': hospital.id.id,
@@ -48,13 +43,9 @@ def user_profile(request):
                     }
                 else:
                     serialized_patient['requested_hospital'] = None
-                    print('6')
             if serialized_patient['admitted_hospital']:
-                print('7')
                 hospital = Hospital.objects.filter(id=patient.admitted_hospital.id).first()
-                print('8')
                 if hospital:
-                    print('9')
                     serialized_patient['admitted_hospital'] = {
                         'id': hospital.id.id,
                         'name': hospital.id.name,
@@ -63,9 +54,8 @@ def user_profile(request):
                     }
                 else:
                     serialized_patient['admitted_hospital'] = None
-                    print('10')
             del serialized_patient['id']
-            print('11')
+            del serialized_patient['ct_scan_document']
             serialized_user['account_type'] = 'patient'
             serialized_user['detail'] = serialized_patient
         if ac_type == 2:
