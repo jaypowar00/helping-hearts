@@ -191,6 +191,7 @@ def get_ven_providers(request):
             }
         )
 
+
 def retrieve_all_ventilator_providers(query_params):
     venProviders = VenProvider.objects.all()
     if ('ven_lt' in query_params and query_params['ven_lt'][0].isdigit) or\
@@ -924,8 +925,7 @@ def get_coworkers(request):
     coworkers_list = []
     for coworker in requests.all():
         ser_coworker = CoWorkerSerializer(coworker).data
-        co_user = User.objects.filter(id=coworker.id).first()
-        ser_coworker.update(UserSerializer(id=co_user.id).data)
+        ser_coworker.update(UserSerializer(User.objects.filter(id=ser_coworker['id']).first()).data)
         coworkers_list.append(ser_coworker)
     return Response(
         {
@@ -933,6 +933,7 @@ def get_coworkers(request):
             'coworkers': coworkers_list
         }
     )
+
 
 @api_view(['GET'])
 @check_blacklisted_token
