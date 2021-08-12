@@ -901,7 +901,7 @@ def remove_worker(request):
     )
 
 
-@api_view(['POST'])
+@api_view(['GET'])
 @check_blacklisted_token
 def get_coworkers(request):
     user = request.user
@@ -934,7 +934,7 @@ def get_coworkers(request):
         }
     )
 
-@api_view(['POST'])
+@api_view(['GET'])
 @check_blacklisted_token
 def get_working_coworkers(request):
     return None
