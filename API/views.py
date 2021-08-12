@@ -938,4 +938,31 @@ def get_coworkers(request):
 @api_view(['GET'])
 @check_blacklisted_token
 def get_working_coworkers(request):
-    return None
+    user = request.user
+    if not user.is_authenticated:
+        return Response(
+            {
+                'status': False,
+                'message': 'Not logged in'
+            }
+        )
+    if user.account_type != 2:
+        return Response(
+            {
+                'status': False,
+                'message': 'This feature is only for Hospitals!'
+            }
+        )
+    hospital = user.hospital
+    requests = hospital.coworker_working_at
+    coworkers_list = []
+    for coworker in requests.all():
+        ser_coworker = CoWorkerSerializer(coworker).data
+        ser_coworker.update(UserSerializer(User.objects.filter(id=ser_coworker['id']).first()).data)
+        coworkers_list.append(ser_coworker)
+    return Response(
+        {
+            'status': True,
+            'coworkers': coworkers_list
+        }
+    )
