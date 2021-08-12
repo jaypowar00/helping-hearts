@@ -899,3 +899,37 @@ def remove_worker(request):
             'message': 'CoWorker removed!'
         }
     )
+
+
+@api_view(['POST'])
+@check_blacklisted_token
+def get_coworkers(request):
+    user = request.user
+    if not user.is_authenticated:
+        return Response(
+            {
+                'status': False,
+                'message': 'Not logged in'
+            }
+        )
+    if user.account_type != 2:
+        return Response(
+            {
+                'status': False,
+                'message': 'This feature is only for Hospitals!'
+            }
+        )
+    hospital = user.hospital
+    requests = hospital.coworker_requested_hospital
+    coworkers_list = []
+    for coworker in requests.all():
+        ser_coworker = CoWorkerSerializer(coworker).data
+        co_user = User.objects.filter(id=coworker.id).first()
+        ser_coworker.update(UserSerializer(id=co_user.id).data)
+        coworkers_list.append(ser_coworker)
+    return Response(
+        {
+            'status': True,
+            'coworkers': coworkers_list
+        }
+    )
