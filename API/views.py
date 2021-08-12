@@ -389,7 +389,6 @@ def get_admitted_patients(request):
 @api_view(['POST'])
 @check_blacklisted_token
 def respond_patient_request(request):
-    query_params = dict(request.query_params)
     user = request.user
     if not user.is_authenticated:
         return Response(
@@ -632,5 +631,271 @@ def cancel_admit_request(request):
         {
             'status': True,
             'message': 'Cancelled Admit Request!'
+        }
+    )
+
+
+@api_view(['POST'])
+@check_blacklisted_token
+def coworker_submit_request(request):
+    jsn = request.data
+    user = request.user
+    if not user.is_authenticated:
+        return Response(
+            {
+                'status': False,
+                'messaage': 'Not logged in!'
+            }
+        )
+    if 'hid' not in jsn:
+        return Response(
+            {
+                'status': False,
+                'message': 'Missing data in request'
+            }
+        )
+    hospital = Hospital.objects.filter(id=jsn['hid']).first()
+    if not hospital:
+        return Response(
+            {
+                'status': False,
+                'message': 'Requested hospital does not exists anymore!'
+            }
+        )
+    if user.account_type in [4, 5, 6]:
+        return Response(
+            {
+                'status': False,
+                'message': 'This feature is only for CoWorkers!'
+            }
+        )
+    coworker = user.coworker
+    if not coworker.available:
+        return Response(
+            {
+                'status': False,
+                'message': 'Unavailable CoWorker can not submit work request!'
+            }
+        )
+    if coworker.work_request:
+        return Response(
+            {
+                'status': False,
+                'message': 'CoWorker can not send another work request while previous one is pending!'
+            }
+        )
+    if coworker.id.account_type == 4:
+        if not hospital.accepting_coworkers:
+            return Response(
+                {
+                    'status': False,
+                    'message': 'Requested hospital is not accepting any CoWorker!'
+                }
+            )
+        if hospital.workers_requirement == 0:
+            return Response(
+                {
+                    'status': False,
+                    'message': 'Requested hospital does not require any more CoWorkers'
+                }
+            )
+    elif coworker.id.account_type == 5:
+        if not hospital.accepting_doctors:
+            return Response(
+                {
+                    'status': False,
+                    'message': 'Requested hospital is not accepting any Doctors!'
+                }
+            )
+        if hospital.doctors_requirement == 0:
+            return Response(
+                {
+                    'status': False,
+                    'message': 'Requested hospital does not require any more Doctors'
+                }
+            )
+    else:
+        if not hospital.accepting_doctors:
+            return Response(
+                {
+                    'status': False,
+                    'message': 'Requested hospital is not accepting any Nurses!'
+                }
+            )
+        if hospital.doctors_requirement == 0:
+            return Response(
+                {
+                    'status': False,
+                    'message': 'Requested hospital does not require any more Nurses'
+                }
+            )
+    coworker.work_request = True
+    coworker.requested_hospital = hospital
+    coworker.save()
+    return Response(
+        {
+            'status': True,
+            'message': 'Request successfully submitted'
+        }
+    )
+
+
+@api_view(['POST'])
+@check_blacklisted_token
+def coworker_cancel_request(request):
+    user = request.user
+    if not user.is_authenticated:
+        return Response(
+            {
+                'status': False,
+                'message': 'Not logged in'
+            }
+        )
+    if user.account_type not in [4, 5, 6]:
+        return Response(
+            {
+                'status': False,
+                'message': 'This feature is only for CoWorkers!'
+            }
+        )
+    coworker = user.coworker
+    if not coworker.work_request:
+        return Response(
+            {
+                'status': False,
+                'message': 'There is no work request available to cancel!'
+            }
+        )
+    coworker.work_request = False
+    coworker.requested_hospital = None
+    coworker.save()
+    return Response(
+        {
+            'status': True,
+            'message': 'Work Request Cancelled!'
+        }
+    )
+
+
+@api_view(['POST'])
+@check_blacklisted_token
+def response_coworker_request(request):
+    user = request.user
+    if not user.is_authenticated:
+        return Response(
+            {
+                'status': False,
+                'message': 'Not logged in'
+            }
+        )
+    if user.account_type != 2:
+        return Response(
+            {
+                'status': False,
+                'message': 'This feature is only for hospitals'
+            }
+        )
+    jsn = request.data
+    if ('accept' not in jsn) or not ('cid' in jsn and type(jsn['cid']) == int):
+        return Response(
+            {
+                'status': False,
+                'message': 'Missing data in request'
+            }
+        )
+    cid = jsn['cid']
+    coworker = CoWorker.objects.filter(id=cid).first()
+    hospital = user.hospital
+    if not coworker:
+        return Response(
+            {
+                'status': False,
+                'message': 'CoWorker does not exists!'
+            }
+        )
+    if jsn['accept']:
+        coworker.work_request = False
+        coworker.requested_hospital = None
+        coworker.available = False
+        coworker.working_at = hospital
+        coworker.save()
+        if coworker.id.account_type == 4 and hospital.workers_requirement > 0:
+            hospital.workers_requirement -= 1
+            hospital.save()
+        elif coworker.id.account_type == 5 and hospital.doctors_requirement > 0:
+            hospital.doctors_requirement -= 1
+            hospital.save()
+        elif coworker.id.account_type == 6 and hospital.nurses_requirement > 0:
+            hospital.nurses_requirement -= 1
+            hospital.save()
+        return Response(
+            {
+                'status': True,
+                'message': "Co-Worker's request Successfully Accepted!"
+            }
+        )
+    else:
+        coworker.requested_hospital = None
+        coworker.work_request = False
+        coworker.save()
+        return Response(
+            {
+                'status': True,
+                'message': "Co-Worker's request declined!"
+            }
+        )
+
+
+@api_view(['POST'])
+@check_blacklisted_token
+def remove_worker(request):
+    jsn = request.data
+    user = request.user
+    if not user.is_authenticated:
+        return Response(
+            {
+                'status': False,
+                'message': 'Not logged in'
+            }
+        )
+    if user.account_type != 2:
+        return Response(
+            {
+                'status': False,
+                'message': 'This feature is only for hospitals'
+            }
+        )
+    if 'cid' not in jsn:
+        return Response(
+            {
+                'status': False,
+                'message': 'Missing data in request'
+            }
+        )
+    hospital = user.hospital
+    coworker = CoWorker.objects.filter(id=jsn['cid']).first()
+    if not coworker:
+        return Response(
+            {
+                'status': False,
+                'message': 'requested coworker does not exists any more!'
+            }
+        )
+    coworker.available = True
+    coworker.working_at = None
+    coworker.save()
+    if coworker.id.account_type == 4 and hospital.accepting_coworkers:
+        hospital.workers_requirement += 1
+        hospital.save()
+    elif coworker.id.account_type == 5 and hospital.accepting_doctors:
+        hospital.doctors_requirement += 1
+        hospital.save()
+    elif coworker.id.account_type == 6 and hospital.accepting_nurses:
+        hospital.nurses_requirement += 1
+        hospital.save()
+    return Response(
+        {
+            'status': True,
+            'message': 'CoWorker removed!'
         }
     )
