@@ -933,3 +933,8 @@ def get_coworkers(request):
             'coworkers': coworkers_list
         }
     )
+
+@api_view(['POST'])
+@check_blacklisted_token
+def get_working_coworkers(request):
+    return None
