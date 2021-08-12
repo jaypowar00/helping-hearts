@@ -78,18 +78,19 @@ def user_profile(request):
                 hospital = Hospital.objects.filter(id=serialized_coworker['requested_hospital']).first()
                 if hospital:
                     serialized_coworker['requested_hospital'] = {
-                        'id': hospital.id,
+                        'id': hospital.id.id,
                         'name': hospital.id.name,
                         'pincode': hospital.id.pincode,
                         'address': hospital.id.address
                     }
                 else:
                     serialized_coworker['requested_hospital'] = None
+            print("1 ##########")
             if serialized_coworker['working_at']:
                 hospital = Hospital.objects.filter(id=serialized_coworker['working_at']).first()
                 if hospital:
                     serialized_coworker['working_at'] = {
-                        'id': hospital.id,
+                        'id': hospital.id.id,
                         'name': hospital.id.name,
                         'pincode': hospital.id.pincode,
                         'address': hospital.id.address
