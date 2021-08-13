@@ -663,7 +663,7 @@ def coworker_submit_request(request):
                 'message': 'Requested hospital does not exists anymore!'
             }
         )
-    if user.account_type in [4, 5, 6]:
+    if user.account_type not in [4, 5, 6]:
         return Response(
             {
                 'status': False,
