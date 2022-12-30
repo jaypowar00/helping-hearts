@@ -10,4 +10,4 @@ The Ventilator Provider can also create their account and set their information 
 Anyone who wish to do the other stuff related to documents in hospital (if it is the case), then they can create their Co-Worker Account and go through list of hospitals who needs Co-Workers right now to apply.
 
 If you are a doctor or retired doctor then by creating Doctor Account you will be able to fulfill the Hospital's request of needing extra doctors for their operations by applying for it.
-(Same for nurses using Nurse Account)
+(Same for nurses using Nurse Account)asd
