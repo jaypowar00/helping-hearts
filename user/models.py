@@ -15,6 +15,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     about = models.TextField(null=True, default=None, blank=True)
     is_staff = models.BooleanField(default=True)
     is_active = models.BooleanField(default=True)
+    is_admin = models.BooleanField(default=False)
     account_type = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1), MaxValueValidator(6)])
     date_joined = models.DateTimeField(default=timezone.now)
 

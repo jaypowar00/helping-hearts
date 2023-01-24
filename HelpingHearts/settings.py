@@ -14,12 +14,13 @@ SECRET_KEY = 'mgo03x74ek!b9e1q+*-_b(y!vlx=wq(0a27%*ns(4%^*_*n-%r'
 REFRESH_SECRET_KEY = 'o2+=7xvbg4h^7*1)v2t&3()0mkbj0)q&9o$%v@l^mxhbmeollx'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('APP_DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
     'helpinghearts-mraj.herokuapp.com',
+    'helpinghearts-mraj.onrender.com',
 ]
 
 blackListedTokens = set()
@@ -84,7 +85,10 @@ DATABASES = {
         'PORT': os.getenv('DB_HH_PORT', '5432'),
         'HOST': os.getenv('DB_HH_HOST_URL', 'localhost'),
         'USER': os.getenv('DB_HH_USERNAME', 'postgres'),
-        'PASSWORD': os.getenv('DB_HH_PASSWORD', 'super')
+        'PASSWORD': os.getenv('DB_HH_PASSWORD', 'super'),
+        'OPTIONS': {
+            'sslmode': 'require'
+        }
     }
 }
 
@@ -135,7 +139,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'user.User'
 
-CSRF_COOKIE_DOMAIN = 'helpinghearts-mraj.herokuapp.com'
+CSRF_COOKIE_DOMAIN = 'helpinghearts-mraj.onrender.com'
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_SAMESITE = 'None'
 SESSION_COOKIE_SAMESITE = 'None'
@@ -148,6 +152,7 @@ CSRF_TRUSTED_ORIGINS = [
     '127.0.0.1',
     'helpinghearts-mraj.herokuapp.com',
     'helpinghearts-mraj.netlify.app',
+    'helpinghearts-mraj.onrender.com',
     'http://192.168.56.1:3000/',
 ]
 
@@ -158,6 +163,7 @@ CORS_ORIGIN_WHITELIST = [
     'http://127.0.0.1:3000',
     'https://helpinghearts-mraj.herokuapp.com',
     'https://helpinghearts-mraj.netlify.app',
+    'https://helpinghearts-mraj.onrender.com',
     'http://192.168.56.1:3000',
 ]
 
