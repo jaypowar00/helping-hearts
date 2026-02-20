@@ -15,15 +15,16 @@ REFRESH_SECRET_KEY = 'o2+=7xvbg4h^7*1)v2t&3()0mkbj0)q&9o$%v@l^mxhbmeollx'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('APP_DEBUG', 'True') == 'True'
+API_DOMAIN = os.getenv('API_URL', 'localhost:8000')
+API_URL = f'https://{API_DOMAIN}' if API_DOMAIN != 'localhost:8000' else f'http://{API_DOMAIN}'
 
-ALLOWED_HOSTS = [
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',') if os.getenv('ALLOWED_HOSTS') else [
     '127.0.0.1',
     'localhost',
-    'helpinghearts-mraj.herokuapp.com',
-    'helpinghearts-mraj.onrender.com',
 ]
 
 blackListedTokens = set()
+
 
 # Application definition
 
@@ -139,32 +140,29 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'user.User'
 
-CSRF_COOKIE_DOMAIN = 'helpinghearts-mraj.onrender.com'
-CSRF_COOKIE_SECURE = True
-CSRF_COOKIE_SAMESITE = 'None'
-SESSION_COOKIE_SAMESITE = 'None'
-SESSION_COOKIE_SAMESITE_FORCE_ALL = True
-SESSION_COOKIE_SECURE = True
-CSRF_TRUSTED_ORIGINS = [
-    'localhost',
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    '127.0.0.1',
-    'helpinghearts-mraj.herokuapp.com',
-    'helpinghearts-mraj.netlify.app',
-    'helpinghearts-mraj.onrender.com',
-    'http://192.168.56.1:3000/',
-]
+if DEBUG:
+    # Local development settings
+    CSRF_COOKIE_DOMAIN = ''
+    CSRF_COOKIE_SECURE = False
+    CSRF_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SECURE = False
+else:
+    # Production settings
+    CSRF_COOKIE_DOMAIN = API_DOMAIN
+    CSRF_COOKIE_SECURE = True
+    CSRF_COOKIE_SAMESITE = 'None'
+    SESSION_COOKIE_SAMESITE = 'None'
+    SESSION_COOKIE_SAMESITE_FORCE_ALL = True
+    SESSION_COOKIE_SECURE = True
 
-CORS_ORIGIN_WHITELIST = [
+CSRF_TRUSTED_ORIGINS = ALLOWED_HOSTS
+
+CORS_ORIGIN_WHITELIST = os.getenv('CORS_ORIGIN_WHITELIST', '').split(',') if not DEBUG else [
     'http://localhost',
     'http://localhost:3000',
     'http://127.0.0.1',
     'http://127.0.0.1:3000',
-    'https://helpinghearts-mraj.herokuapp.com',
-    'https://helpinghearts-mraj.netlify.app',
-    'https://helpinghearts-mraj.onrender.com',
-    'http://192.168.56.1:3000',
 ]
 
 CORS_ALLOW_CREDENTIALS = True
